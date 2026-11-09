@@ -1,5 +1,5 @@
 <p align="center">
-  <img src="assets/banner.svg" alt="Cadence Banner" width="100%" />
+  <img src="assets/hero-banner.svg" alt="Cadence Banner" width="100%" />
 </p>
 
 <p align="center">
