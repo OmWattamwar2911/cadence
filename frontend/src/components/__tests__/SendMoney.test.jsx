@@ -120,4 +120,60 @@ describe('SendMoney Component', () => {
     expect(secondIdemKey).toBe(firstIdemKey);
     expect(await screen.findByText(/completed successfully/i)).toBeInTheDocument();
   });
+
+  it('switches to Standing Orders tab and creates recurring auto-transfer', async () => {
+    apiClient.get.mockResolvedValueOnce({ data: [] });
+    apiClient.post.mockResolvedValueOnce({
+      data: {
+        id: 1,
+        recipientEmail: 'landlord@example.com',
+        amount: 250000,
+        frequency: 'MONTHLY',
+        status: 'ACTIVE',
+      },
+    });
+    // For refresh after post
+    apiClient.get.mockResolvedValueOnce({
+      data: [
+        {
+          id: 1,
+          recipientEmail: 'landlord@example.com',
+          amount: 250000,
+          frequency: 'MONTHLY',
+          status: 'ACTIVE',
+          nextExecutionAt: '2026-12-01T00:00:00Z',
+        },
+      ],
+    });
+
+    renderComponent();
+    const user = userEvent.setup();
+
+    // Click on Standing Orders tab
+    const standingOrdersTab = screen.getByRole('button', { name: /standing orders/i });
+    await user.click(standingOrdersTab);
+
+    expect(screen.getByLabelText(/recipient email/i)).toBeInTheDocument();
+    expect(screen.getByLabelText(/frequency/i)).toBeInTheDocument();
+
+    await user.type(screen.getByLabelText(/recipient email/i), 'landlord@example.com');
+    await user.type(screen.getByLabelText(/amount in rupees/i), '2500.00');
+    await user.selectOptions(screen.getByLabelText(/frequency/i), 'MONTHLY');
+
+    const scheduleBtn = screen.getByRole('button', { name: /schedule auto-transfer/i });
+    await user.click(scheduleBtn);
+
+    await waitFor(() => {
+      expect(apiClient.post).toHaveBeenCalledWith(
+        '/scheduled-transfers',
+        expect.objectContaining({
+          toEmail: 'landlord@example.com',
+          amount: 250000,
+          frequency: 'MONTHLY',
+        })
+      );
+    });
+
+    expect(await screen.findByText(/recurring monthly transfer of ₹2500.00 scheduled successfully/i)).toBeInTheDocument();
+  });
 });

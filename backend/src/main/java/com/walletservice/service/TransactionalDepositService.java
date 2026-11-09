@@ -9,12 +9,14 @@ import com.walletservice.repository.IdempotencyKeyRepository;
 import com.walletservice.repository.LedgerEntryRepository;
 import com.walletservice.repository.UserRepository;
 import com.walletservice.repository.WalletRepository;
+import com.walletservice.util.LedgerHashUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.Instant;
+import java.util.Map;
 import java.util.UUID;
 
 @Service
@@ -26,6 +28,7 @@ public class TransactionalDepositService {
     private final WalletRepository walletRepository;
     private final LedgerEntryRepository ledgerEntryRepository;
     private final IdempotencyKeyRepository idempotencyKeyRepository;
+    private final SseNotificationService sseNotificationService;
     private final ObjectMapper objectMapper;
 
     public TransactionalDepositService(
@@ -33,11 +36,13 @@ public class TransactionalDepositService {
             WalletRepository walletRepository,
             LedgerEntryRepository ledgerEntryRepository,
             IdempotencyKeyRepository idempotencyKeyRepository,
+            SseNotificationService sseNotificationService,
             ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.ledgerEntryRepository = ledgerEntryRepository;
         this.idempotencyKeyRepository = idempotencyKeyRepository;
+        this.sseNotificationService = sseNotificationService;
         this.objectMapper = objectMapper;
     }
 
@@ -62,8 +67,14 @@ public class TransactionalDepositService {
         lockedWallet.setBalance(newBalance);
         walletRepository.save(lockedWallet);
 
-        // 4. Create ledger DEPOSIT entry
-        LedgerEntry ledgerEntry = new LedgerEntry(null, lockedWallet, EntryType.DEPOSIT, amount, newBalance);
+        // 4. Create cryptographically hashed ledger DEPOSIT entry
+        String lastHash = ledgerEntryRepository.findTopByWalletIdOrderByIdDesc(lockedWallet.getId())
+                .map(LedgerEntry::getEntryHash)
+                .orElse(LedgerHashUtil.GENESIS_HASH);
+        Instant now = Instant.now();
+        String entryHash = LedgerHashUtil.calculateHash(lastHash, lockedWallet.getId(), "DEPOSIT", amount, newBalance);
+        LedgerEntry ledgerEntry = new LedgerEntry(null, lockedWallet, EntryType.DEPOSIT, amount, newBalance, lastHash, entryHash);
+        ledgerEntry.setCreatedAt(now);
         ledgerEntryRepository.save(ledgerEntry);
 
         String reference = "DEP-" + UUID.randomUUID().toString().substring(0, 8).toUpperCase();
@@ -73,7 +84,7 @@ public class TransactionalDepositService {
                 newBalance,
                 lockedWallet.getCurrency(),
                 reference,
-                Instant.now()
+                now
         );
 
         // 5. Complete idempotency key
@@ -85,6 +96,19 @@ public class TransactionalDepositService {
         } catch (JsonProcessingException e) {
             log.error("Failed to serialize deposit response for idempotency key: {}", idemKey, e);
             throw new IllegalStateException("Failed to store idempotency response", e);
+        }
+
+        // 6. Push real-time SSE notification to user
+        try {
+            sseNotificationService.sendToUser(userId, "DEPOSIT_COMPLETED", Map.of(
+                    "type", "DEPOSIT_COMPLETED",
+                    "amount", amount,
+                    "newBalance", newBalance,
+                    "reference", reference,
+                    "timestamp", now
+            ));
+        } catch (Exception ex) {
+            log.debug("Failed to push SSE deposit notification: {}", ex.getMessage());
         }
 
         log.info("Deposit completed: walletId={}, amount={}, newBalance={}, ref={}",

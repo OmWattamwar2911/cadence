@@ -1,6 +1,7 @@
 import React from 'react';
 import { BrowserRouter, Routes, Route, Navigate, useLocation } from 'react-router-dom';
 import { AuthProvider } from './context/AuthContext';
+import { NotificationProvider } from './context/NotificationContext';
 import Navbar from './components/Navbar';
 import ProtectedRoute from './components/ProtectedRoute';
 import Landing from './pages/Landing';
@@ -74,7 +75,9 @@ export default function App() {
   return (
     <BrowserRouter>
       <AuthProvider>
-        <Layout />
+        <NotificationProvider>
+          <Layout />
+        </NotificationProvider>
       </AuthProvider>
     </BrowserRouter>
   );

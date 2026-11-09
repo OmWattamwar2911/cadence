@@ -63,4 +63,42 @@ public class TransactionService {
 
         return PageResponse.from(mapped);
     }
+
+    @Transactional(readOnly = true)
+    public byte[] exportStatementCsv(Long userId) {
+        Long walletId = walletRepository.findWalletIdByUserId(userId)
+                .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user: " + userId));
+
+        java.util.List<LedgerEntry> entries = ledgerEntryRepository.findAllByWalletIdOrderByIdAsc(walletId);
+
+        StringBuilder csv = new StringBuilder();
+        csv.append("CADENCE OFFICIAL FINANCIAL STATEMENT\n");
+        csv.append("Wallet ID: ").append(walletId).append("\n");
+        csv.append("Export Date: ").append(Instant.now()).append("\n\n");
+        csv.append("Entry ID,Timestamp,Type,Amount (INR),Balance After (INR),Transfer Reference,Cryptographic Hash\n");
+
+        for (LedgerEntry entry : entries) {
+            long amtUnits = entry.getAmount() / 100;
+            long amtMinor = Math.abs(entry.getAmount() % 100);
+            String formattedAmt = String.format("₹%d.%02d", amtUnits, amtMinor);
+
+            long balUnits = entry.getBalanceAfter() / 100;
+            long balMinor = Math.abs(entry.getBalanceAfter() % 100);
+            String formattedBal = String.format("₹%d.%02d", balUnits, balMinor);
+
+            String ref = (entry.getTransfer() != null && entry.getTransfer().getReference() != null)
+                    ? entry.getTransfer().getReference() : "N/A";
+            String hash = entry.getEntryHash() != null ? entry.getEntryHash() : "N/A";
+
+            csv.append(entry.getId()).append(",")
+               .append(entry.getCreatedAt()).append(",")
+               .append(entry.getEntryType()).append(",")
+               .append("\"").append(formattedAmt).append("\",")
+               .append("\"").append(formattedBal).append("\",")
+               .append(ref).append(",")
+               .append(hash).append("\n");
+        }
+
+        return csv.toString().getBytes(java.nio.charset.StandardCharsets.UTF_8);
+    }
 }

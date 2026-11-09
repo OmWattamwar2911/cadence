@@ -7,10 +7,13 @@ import com.walletservice.entity.*;
 import com.walletservice.exception.InsufficientBalanceException;
 import com.walletservice.exception.ResourceNotFoundException;
 import com.walletservice.repository.*;
+import com.walletservice.util.LedgerHashUtil;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+
+import java.time.Instant;
 
 @Service
 public class TransferService {
@@ -105,9 +108,22 @@ public class TransferService {
         Transfer transfer = new Transfer(lockedSender, lockedReceiver, amount, TransferStatus.COMPLETED, reference);
         transfer = transferRepository.save(transfer);
 
-        // 9. Insert two Ledger entries (DEBIT for sender, CREDIT for receiver)
-        LedgerEntry debitEntry = new LedgerEntry(transfer, lockedSender, EntryType.DEBIT, amount, senderBalanceAfter);
-        LedgerEntry creditEntry = new LedgerEntry(transfer, lockedReceiver, EntryType.CREDIT, amount, receiverBalanceAfter);
+        // 9. Insert two cryptographically signed Ledger entries (DEBIT for sender, CREDIT for receiver)
+        Instant now = Instant.now();
+        String lastSenderHash = ledgerEntryRepository.findTopByWalletIdOrderByIdDesc(lockedSender.getId())
+                .map(LedgerEntry::getEntryHash)
+                .orElse(LedgerHashUtil.GENESIS_HASH);
+        String debitHash = LedgerHashUtil.calculateHash(lastSenderHash, lockedSender.getId(), "DEBIT", amount, senderBalanceAfter);
+        LedgerEntry debitEntry = new LedgerEntry(transfer, lockedSender, EntryType.DEBIT, amount, senderBalanceAfter, lastSenderHash, debitHash);
+        debitEntry.setCreatedAt(now);
+
+        String lastReceiverHash = ledgerEntryRepository.findTopByWalletIdOrderByIdDesc(lockedReceiver.getId())
+                .map(LedgerEntry::getEntryHash)
+                .orElse(LedgerHashUtil.GENESIS_HASH);
+        String creditHash = LedgerHashUtil.calculateHash(lastReceiverHash, lockedReceiver.getId(), "CREDIT", amount, receiverBalanceAfter);
+        LedgerEntry creditEntry = new LedgerEntry(transfer, lockedReceiver, EntryType.CREDIT, amount, receiverBalanceAfter, lastReceiverHash, creditHash);
+        creditEntry.setCreatedAt(now);
+
         ledgerEntryRepository.save(debitEntry);
         ledgerEntryRepository.save(creditEntry);
 

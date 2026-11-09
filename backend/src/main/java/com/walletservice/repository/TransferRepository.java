@@ -23,4 +23,6 @@ public interface TransferRepository extends JpaRepository<Transfer, Long> {
             @Param("since") Instant since);
 
     List<Transfer> findByFromWalletIdAndStatus(Long fromWalletId, TransferStatus status);
+
+    java.util.Optional<Transfer> findByReference(String reference);
 }

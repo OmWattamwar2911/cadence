@@ -30,6 +30,7 @@ public class TransferOrchestrator {
     private final TransferService transferService;
     private final TransferRejectionService transferRejectionService;
     private final IdempotencyService idempotencyService;
+    private final SseNotificationService sseNotificationService;
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
@@ -39,12 +40,14 @@ public class TransferOrchestrator {
             TransferService transferService,
             TransferRejectionService transferRejectionService,
             IdempotencyService idempotencyService,
+            SseNotificationService sseNotificationService,
             ObjectMapper objectMapper) {
         this.userRepository = userRepository;
         this.walletRepository = walletRepository;
         this.transferService = transferService;
         this.transferRejectionService = transferRejectionService;
         this.idempotencyService = idempotencyService;
+        this.sseNotificationService = sseNotificationService;
         this.objectMapper = objectMapper;
     }
 
@@ -68,7 +71,7 @@ public class TransferOrchestrator {
         while (true) {
             attempt++;
             try {
-                return transferService.executeTransfer(
+                TransferResponse response = transferService.executeTransfer(
                         senderUserId,
                         receiver.getId(),
                         idemKey,
@@ -76,6 +79,31 @@ public class TransferOrchestrator {
                         request.amount(),
                         request.reference()
                 );
+
+                // Push real-time SSE event to receiver and sender
+                try {
+                    User senderUser = userRepository.findById(senderUserId).orElse(null);
+                    String senderEmail = senderUser != null ? senderUser.getEmail() : "user";
+                    sseNotificationService.sendToUser(receiver.getId(), "TRANSFER_RECEIVED", java.util.Map.of(
+                            "type", "TRANSFER_RECEIVED",
+                            "senderEmail", senderEmail,
+                            "amount", request.amount(),
+                            "reference", response.reference() != null ? response.reference() : "TRF-" + response.transferId(),
+                            "timestamp", response.createdAt()
+                    ));
+                    sseNotificationService.sendToUser(senderUserId, "TRANSFER_SENT", java.util.Map.of(
+                            "type", "TRANSFER_SENT",
+                            "recipientEmail", normalizedRecipientEmail,
+                            "amount", request.amount(),
+                            "newBalance", response.senderBalanceAfter(),
+                            "reference", response.reference() != null ? response.reference() : "TRF-" + response.transferId(),
+                            "timestamp", response.createdAt()
+                    ));
+                } catch (Exception ex) {
+                    log.debug("Failed to push SSE transfer notification: {}", ex.getMessage());
+                }
+
+                return response;
             } catch (FraudRuleViolationException e) {
                 // Fraud rule was violated: the transfer transaction has rolled back.
                 // Record the REJECTED transfer audit trail in an autonomous committed transaction.

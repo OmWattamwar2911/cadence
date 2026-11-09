@@ -29,6 +29,12 @@ public class LedgerEntry {
     @Column(name = "balance_after", nullable = false)
     private Long balanceAfter;
 
+    @Column(name = "prev_hash", length = 64)
+    private String prevHash;
+
+    @Column(name = "entry_hash", length = 64)
+    private String entryHash;
+
     @Column(name = "created_at", nullable = false, updatable = false)
     private Instant createdAt;
 
@@ -41,6 +47,17 @@ public class LedgerEntry {
         this.entryType = entryType;
         this.amount = amount;
         this.balanceAfter = balanceAfter;
+        this.createdAt = Instant.now();
+    }
+
+    public LedgerEntry(Transfer transfer, Wallet wallet, EntryType entryType, Long amount, Long balanceAfter, String prevHash, String entryHash) {
+        this.transfer = transfer;
+        this.wallet = wallet;
+        this.entryType = entryType;
+        this.amount = amount;
+        this.balanceAfter = balanceAfter;
+        this.prevHash = prevHash;
+        this.entryHash = entryHash;
         this.createdAt = Instant.now();
     }
 
@@ -97,6 +114,22 @@ public class LedgerEntry {
 
     public void setBalanceAfter(Long balanceAfter) {
         this.balanceAfter = balanceAfter;
+    }
+
+    public String getPrevHash() {
+        return prevHash;
+    }
+
+    public void setPrevHash(String prevHash) {
+        this.prevHash = prevHash;
+    }
+
+    public String getEntryHash() {
+        return entryHash;
+    }
+
+    public void setEntryHash(String entryHash) {
+        this.entryHash = entryHash;
     }
 
     public Instant getCreatedAt() {

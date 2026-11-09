@@ -45,4 +45,14 @@ public class TransactionController {
                 userPrincipal.getId(), type, from, to, page, size);
         return ResponseEntity.ok(response);
     }
+
+    @GetMapping(value = "/export", produces = "text/csv")
+    @Operation(summary = "Export official financial statement in CSV format")
+    public ResponseEntity<byte[]> exportStatement(@AuthenticationPrincipal UserPrincipal userPrincipal) {
+        byte[] csv = transactionService.exportStatementCsv(userPrincipal.getId());
+        return ResponseEntity.ok()
+                .header(org.springframework.http.HttpHeaders.CONTENT_DISPOSITION, "attachment; filename=\"cadence-statement.csv\"")
+                .header(org.springframework.http.HttpHeaders.CONTENT_TYPE, "text/csv")
+                .body(csv);
+    }
 }

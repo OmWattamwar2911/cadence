@@ -35,4 +35,10 @@ public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> 
     @Query("SELECT COALESCE(SUM(CASE WHEN le.entryType IN ('CREDIT', 'DEPOSIT') THEN le.amount ELSE -le.amount END), 0) " +
            "FROM LedgerEntry le WHERE le.wallet.id = :walletId")
     Long calculateReconciledBalance(@Param("walletId") Long walletId);
+
+    java.util.Optional<LedgerEntry> findTopByWalletIdOrderByIdDesc(Long walletId);
+
+    java.util.List<LedgerEntry> findAllByWalletIdOrderByIdAsc(Long walletId);
+
+    java.util.List<LedgerEntry> findByTransferId(Long transferId);
 }

@@ -109,7 +109,7 @@ public class SecurityConfig {
         }
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
         configuration.setAllowedHeaders(List.of("Authorization", "Content-Type", "Idempotency-Key", "X-Request-Id"));
-        configuration.setExposedHeaders(List.of("X-Request-Id", "Retry-After"));
+        configuration.setExposedHeaders(List.of("X-Request-Id", "Retry-After", "Content-Disposition"));
         configuration.setAllowCredentials(true);
         configuration.setMaxAge(3600L);
 

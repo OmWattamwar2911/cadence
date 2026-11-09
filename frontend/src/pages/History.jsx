@@ -2,7 +2,19 @@ import React, { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import apiClient from '../api/axios';
 import { formatPaise } from '../utils/money';
-import { History as HistoryIcon, Filter, ChevronLeft, ChevronRight, AlertCircle, PlusCircle } from 'lucide-react';
+import AuditReceiptModal from '../components/AuditReceiptModal';
+import {
+  History as HistoryIcon,
+  Filter,
+  ChevronLeft,
+  ChevronRight,
+  AlertCircle,
+  PlusCircle,
+  Download,
+  FileSpreadsheet,
+  ShieldCheck,
+  Loader2,
+} from 'lucide-react';
 
 export default function HistoryPage() {
   const [transactions, setTransactions] = useState([]);
@@ -13,7 +25,11 @@ export default function HistoryPage() {
   const [fromDate, setFromDate] = useState('');
   const [toDate, setToDate] = useState('');
   const [loading, setLoading] = useState(true);
+  const [exporting, setExporting] = useState(false);
   const [error, setError] = useState('');
+
+  // Receipt modal state
+  const [selectedReceiptRef, setSelectedReceiptRef] = useState(null);
 
   const pageSize = 10;
 
@@ -64,6 +80,29 @@ export default function HistoryPage() {
     setToDate('');
   };
 
+  const handleExportCsv = async () => {
+    setExporting(true);
+    setError('');
+    try {
+      const res = await apiClient.get('/transactions/export', {
+        responseType: 'blob',
+      });
+      const url = window.URL.createObjectURL(new Blob([res.data], { type: 'text/csv' }));
+      const link = document.createElement('a');
+      link.href = url;
+      link.setAttribute('download', `statement-${new Date().toISOString().slice(0, 10)}.csv`);
+      document.body.appendChild(link);
+      link.click();
+      link.remove();
+      window.URL.revokeObjectURL(url);
+    } catch (err) {
+      console.error('Failed to export statement:', err);
+      setError('Failed to download certified financial statement. Please try again.');
+    } finally {
+      setExporting(false);
+    }
+  };
+
   return (
     <div className="container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
       <div className="card">
@@ -77,19 +116,45 @@ export default function HistoryPage() {
             </p>
           </div>
 
-          {/* Type Filter Buttons */}
-          <div style={{ display: 'flex', gap: '8px' }}>
-            {['', 'DEPOSIT', 'DEBIT', 'CREDIT'].map((t) => (
-              <button
-                key={t}
-                type="button"
-                className={`btn ${selectedType === t ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '8px 16px', fontSize: '13px' }}
-                onClick={() => setSelectedType(t)}
-              >
-                {t || 'ALL'}
-              </button>
-            ))}
+          <div style={{ display: 'flex', gap: '10px', alignItems: 'center', flexWrap: 'wrap' }}>
+            <button
+              type="button"
+              onClick={handleExportCsv}
+              disabled={exporting}
+              className="btn"
+              style={{
+                fontSize: '13px',
+                padding: '8px 16px',
+                background: 'var(--charcoal)',
+                color: 'var(--yellow)',
+                border: '1px solid var(--charcoal)',
+                display: 'inline-flex',
+                alignItems: 'center',
+                gap: '8px',
+              }}
+            >
+              {exporting ? (
+                <Loader2 size={15} className="animate-spin" />
+              ) : (
+                <FileSpreadsheet size={15} />
+              )}
+              {exporting ? 'GENERATING CSV...' : 'EXPORT STATEMENT (CSV)'}
+            </button>
+
+            {/* Type Filter Buttons */}
+            <div style={{ display: 'flex', gap: '6px' }}>
+              {['', 'DEPOSIT', 'DEBIT', 'CREDIT'].map((t) => (
+                <button
+                  key={t}
+                  type="button"
+                  className={`btn ${selectedType === t ? 'btn-primary' : 'btn-secondary'}`}
+                  style={{ padding: '8px 14px', fontSize: '13px' }}
+                  onClick={() => setSelectedType(t)}
+                >
+                  {t || 'ALL'}
+                </button>
+              ))}
+            </div>
           </div>
         </div>
 
@@ -175,6 +240,7 @@ export default function HistoryPage() {
                   <th>AMOUNT</th>
                   <th>BALANCE AFTER</th>
                   <th>DATE & TIME</th>
+                  <th>PROOF</th>
                 </tr>
               </thead>
               <tbody>
@@ -204,6 +270,27 @@ export default function HistoryPage() {
                       </td>
                       <td style={{ color: '#64748b', fontSize: '13px' }}>
                         {new Date(tx.createdAt).toLocaleString()}
+                      </td>
+                      <td>
+                        {tx.reference && tx.reference.startsWith('TRF-') ? (
+                          <button
+                            type="button"
+                            onClick={() => setSelectedReceiptRef(tx.reference)}
+                            className="btn btn-secondary"
+                            style={{
+                              padding: '4px 10px',
+                              fontSize: '11px',
+                              display: 'inline-flex',
+                              alignItems: 'center',
+                              gap: '4px',
+                            }}
+                            title="View dual-entry cryptographic SHA-256 seal"
+                          >
+                            <ShieldCheck size={13} color="var(--success)" /> RECEIPT
+                          </button>
+                        ) : (
+                          <span style={{ color: '#94a3b8', fontSize: '12px' }}>—</span>
+                        )}
                       </td>
                     </tr>
                   );
@@ -240,6 +327,13 @@ export default function HistoryPage() {
           </div>
         )}
       </div>
+
+      {/* Cryptographic Receipt Modal */}
+      <AuditReceiptModal
+        reference={selectedReceiptRef}
+        isOpen={!!selectedReceiptRef}
+        onClose={() => setSelectedReceiptRef(null)}
+      />
     </div>
   );
 }
