@@ -17,7 +17,7 @@ app:
     allowed-origins: "*"
   fraud:
     max-amount-per-transfer: 10000000
-    velocity-max-transfers: 5
+    velocity-max-transfers: 1000
     velocity-window-minutes: 5
   rate-limit:
     login:

@@ -51,11 +51,11 @@ public class TransactionalDepositService {
         idempotencyKey = idempotencyKeyRepository.saveAndFlush(idempotencyKey);
 
         // 2. Lock wallet with PESSIMISTIC_WRITE
-        Wallet wallet = walletRepository.findByUserId(userId)
+        Long walletId = walletRepository.findWalletIdByUserId(userId)
                 .orElseThrow(() -> new ResourceNotFoundException("Wallet not found for user: " + userId));
 
-        Wallet lockedWallet = walletRepository.findByIdWithLock(wallet.getId())
-                .orElseThrow(() -> new ResourceNotFoundException("Failed to acquire lock for wallet: " + wallet.getId()));
+        Wallet lockedWallet = walletRepository.findByIdWithLock(walletId)
+                .orElseThrow(() -> new ResourceNotFoundException("Failed to acquire lock for wallet: " + walletId));
 
         // 3. Prevent overflow and update balance
         long newBalance = Math.addExact(lockedWallet.getBalance(), amount);
