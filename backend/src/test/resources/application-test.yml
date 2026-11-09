@@ -1,0 +1,37 @@
+spring:
+  jpa:
+    hibernate:
+      ddl-auto: validate
+    open-in-view: false
+    show-sql: false
+  flyway:
+    enabled: true
+    locations: classpath:db/migration
+
+jwt:
+  secret: 404E635266556A586E3272357538782F413F4428472B4B6250645367566B5970
+  expiration-ms: 900000
+
+app:
+  cors:
+    allowed-origins: "*"
+  fraud:
+    max-amount-per-transfer: 10000000
+    velocity-max-transfers: 5
+    velocity-window-minutes: 5
+  rate-limit:
+    login:
+      capacity: 100
+      refill-tokens: 100
+      refill-duration-seconds: 1
+    transfer:
+      capacity: 100
+      refill-tokens: 100
+      refill-duration-seconds: 1
+
+logging:
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss.SSS} [%thread] [%X{requestId}] %-5level %logger{36} - %msg%n"
+  level:
+    com.walletservice: DEBUG
+    org.flywaydb: INFO
