@@ -225,7 +225,7 @@ export default function Landing() {
               </div>
             </div>
 
-            {/* Right Half: The Payflow Way */}
+            {/* Right Half: The Cadence Way */}
             <div
               className="card card-dark"
               style={{

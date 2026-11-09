@@ -1,0 +1,129 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 440" width="100%" height="auto">
+  <defs>
+    <!-- Background Grid Pattern -->
+    <pattern id="grid" width="40" height="40" patternUnits="userSpaceOnUse">
+      <path d="M 40 0 L 0 0 0 40" fill="none" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.08" />
+    </pattern>
+
+    <!-- Subtle Yellow Ambient Glow -->
+    <radialGradient id="yellowGlow" cx="50%" cy="100%" r="70%">
+      <stop offset="0%" stop-color="#ffe17c" stop-opacity="0.18" />
+      <stop offset="60%" stop-color="#ffe17c" stop-opacity="0.03" />
+      <stop offset="100%" stop-color="#171e19" stop-opacity="0" />
+    </radialGradient>
+
+    <!-- Linear Highlight Gradient -->
+    <linearGradient id="yellowBarGrad" x1="0%" y1="0%" x2="100%" y2="0%">
+      <stop offset="0%" stop-color="#ffe17c" />
+      <stop offset="100%" stop-color="#f5d76e" />
+    </linearGradient>
+
+    <!-- Card Shadow -->
+    <filter id="brutalShadow" x="-5%" y="-5%" width="110%" height="115%">
+      <feDropShadow dx="0" dy="8" stdDeviation="16" flood-color="#000000" flood-opacity="0.45" />
+    </filter>
+  </defs>
+
+  <style>
+    .headline { font-family: 'Anton', 'Impact', 'Arial Black', sans-serif; font-weight: 900; text-transform: uppercase; }
+    .body { font-family: 'Satoshi', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Helvetica, Arial, sans-serif; }
+    .mono { font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace; }
+  </style>
+
+  <!-- Background Base Canvas -->
+  <rect width="1200" height="440" fill="#171e19" />
+
+  <!-- 40px Faint Sage Grid Overlay -->
+  <rect width="1200" height="440" fill="url(#grid)" />
+
+  <!-- Ambient Glow at Bottom -->
+  <rect width="1200" height="440" fill="url(#yellowGlow)" />
+
+  <!-- Brutalist Outer Perimeter Frame -->
+  <rect x="20" y="20" width="1160" height="400" rx="16" fill="none" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+
+  <!-- Top Status Badge -->
+  <g transform="translate(60, 56)">
+    <rect x="0" y="0" width="270" height="30" rx="15" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.25" />
+    <circle cx="16" cy="15" r="4.5" fill="#ffe17c" />
+    <text x="30" y="19" class="body" font-size="11" font-weight="700" fill="#ffffff" letter-spacing="2.5">BUILT FOR SAFE TRANSFERS</text>
+  </g>
+
+  <!-- GitHub Repo Stats / Release Pill -->
+  <g transform="translate(970, 56)">
+    <rect x="0" y="0" width="170" height="30" rx="6" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.2" />
+    <text x="85" y="19" class="mono" font-size="11" font-weight="600" fill="#b7c6c2" text-anchor="middle">v1.0.0 • PRODUCTION</text>
+  </g>
+
+  <!-- Big Headline Container -->
+  <g transform="translate(60, 160)">
+    <!-- Yellow Tilt Bar Behind Text (Highlight Bar Variant) -->
+    <rect x="420" y="-35" width="220" height="48" fill="url(#yellowBarGrad)" transform="rotate(-1.5 420 -35)" rx="4" />
+    
+    <!-- Main Headline Text -->
+    <text x="0" y="0" class="headline" font-size="96" fill="#ffffff" letter-spacing="1">
+      CADENCE<tspan fill="#ffe17c">.</tspan>
+    </text>
+
+    <!-- Subtitle Line -->
+    <text x="4" y="38" class="body" font-size="19" font-weight="500" fill="#b7c6c2" letter-spacing="0.5">
+      High-Throughput P2P Payments &amp; Immutable Double-Entry Ledger Engine
+    </text>
+  </g>
+
+  <!-- Feature Highlights (Brutalist Bento Pills) -->
+  <g transform="translate(60, 270)">
+    <!-- Tag 1 -->
+    <g transform="translate(0, 0)">
+      <rect x="0" y="0" width="168" height="40" rx="8" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+      <text x="84" y="24" class="headline" font-size="13" fill="#ffe17c" letter-spacing="1" text-anchor="middle">ORDERED ROW LOCKS</text>
+    </g>
+
+    <!-- Tag 2 -->
+    <g transform="translate(180, 0)">
+      <rect x="0" y="0" width="180" height="40" rx="8" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+      <text x="90" y="24" class="headline" font-size="13" fill="#ffe17c" letter-spacing="1" text-anchor="middle">STRICT DOUBLE-ENTRY</text>
+    </g>
+
+    <!-- Tag 3 -->
+    <g transform="translate(372, 0)">
+      <rect x="0" y="0" width="185" height="40" rx="8" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+      <text x="92.5" y="24" class="headline" font-size="13" fill="#ffe17c" letter-spacing="1" text-anchor="middle">ATOMIC IDEMPOTENCY</text>
+    </g>
+
+    <!-- Tag 4 -->
+    <g transform="translate(569, 0)">
+      <rect x="0" y="0" width="160" height="40" rx="8" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+      <text x="80" y="24" class="headline" font-size="13" fill="#ffe17c" letter-spacing="1" text-anchor="middle">ZERO FLOAT DRIFT</text>
+    </g>
+
+    <!-- Tag 5 -->
+    <g transform="translate(741, 0)">
+      <rect x="0" y="0" width="170" height="40" rx="8" fill="#272727" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.18" />
+      <text x="85" y="24" class="headline" font-size="13" fill="#ffe17c" letter-spacing="1" text-anchor="middle">83.34% JACOCO GATE</text>
+    </g>
+
+    <!-- Tag 6 -->
+    <g transform="translate(923, 0)">
+      <rect x="0" y="0" width="157" height="40" rx="8" fill="#ffe17c" />
+      <text x="78.5" y="24" class="headline" font-size="13" fill="#171e19" letter-spacing="1" text-anchor="middle">TESTCONTAINERS ✓</text>
+    </g>
+  </g>
+
+  <!-- Bottom Tech Stack Divider & Bar -->
+  <line x1="60" y1="345" x2="1140" y2="345" stroke="#b7c6c2" stroke-width="1" stroke-opacity="0.12" />
+
+  <g transform="translate(60, 380)">
+    <text x="0" y="0" class="body" font-size="13" font-weight="700" fill="#ffffff" letter-spacing="1.5">TECH STACK</text>
+    <text x="110" y="0" class="mono" font-size="12" fill="#b7c6c2">
+      JAVA 21 <tspan fill="#ffe17c">•</tspan> SPRING BOOT 3.3.5 <tspan fill="#ffe17c">•</tspan> MYSQL 8.0 (INNODB) <tspan fill="#ffe17c">•</tspan> REACT 18 + VITE <tspan fill="#ffe17c">•</tspan> BUCKET4J <tspan fill="#ffe17c">•</tspan> DOCKER COMPOSE
+    </text>
+  </g>
+
+  <!-- Performance Metric Badge Right Bottom -->
+  <g transform="translate(990, 380)">
+    <text x="150" y="0" class="mono" font-size="12" font-weight="600" fill="#ffe17c" text-anchor="end">
+      0.00% ERROR RATE @ 36.17 TPS
+    </text>
+  </g>
+</svg>

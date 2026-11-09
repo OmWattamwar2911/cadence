@@ -172,7 +172,7 @@ export default function AbstractMockup() {
                 letterSpacing: '0.04em',
               }}
             >
-              alex@payflow
+              alex@cadence
             </span>
           </div>
         </div>
