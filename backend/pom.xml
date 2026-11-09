@@ -141,17 +141,6 @@
             <plugin>
                 <groupId>org.apache.maven.plugins</groupId>
                 <artifactId>maven-surefire-plugin</artifactId>
-                <configuration>
-                    <environmentVariables>
-                        <DOCKER_HOST>npipe:////./pipe/dockerDesktopLinuxEngine</DOCKER_HOST>
-                        <DOCKER_API_VERSION>1.44</DOCKER_API_VERSION>
-                    </environmentVariables>
-                    <systemPropertyVariables>
-                        <api.version>1.44</api.version>
-                        <docker.client.api.version>1.44</docker.client.api.version>
-                        <docker.host>npipe:////./pipe/dockerDesktopLinuxEngine</docker.host>
-                    </systemPropertyVariables>
-                </configuration>
             </plugin>
             <plugin>
                 <groupId>org.jacoco</groupId>
@@ -170,8 +159,61 @@
                             <goal>report</goal>
                         </goals>
                     </execution>
+                    <execution>
+                        <id>check</id>
+                        <phase>verify</phase>
+                        <goals>
+                            <goal>check</goal>
+                        </goals>
+                    </execution>
                 </executions>
+                <configuration>
+                    <rules>
+                        <rule>
+                            <element>PACKAGE</element>
+                            <includes>
+                                <include>com.walletservice.service</include>
+                            </includes>
+                            <limits>
+                                <limit>
+                                    <counter>INSTRUCTION</counter>
+                                    <value>COVEREDRATIO</value>
+                                    <minimum>0.80</minimum>
+                                </limit>
+                            </limits>
+                        </rule>
+                    </rules>
+                </configuration>
             </plugin>
         </plugins>
     </build>
+    <profiles>
+        <profile>
+            <id>windows-testcontainers</id>
+            <activation>
+                <os>
+                    <family>windows</family>
+                </os>
+            </activation>
+            <build>
+                <plugins>
+                    <plugin>
+                        <groupId>org.apache.maven.plugins</groupId>
+                        <artifactId>maven-surefire-plugin</artifactId>
+                        <configuration>
+                            <environmentVariables>
+                                <DOCKER_HOST>npipe:////./pipe/dockerDesktopLinuxEngine</DOCKER_HOST>
+                                <DOCKER_API_VERSION>1.44</DOCKER_API_VERSION>
+                            </environmentVariables>
+                            <systemPropertyVariables>
+                                <api.version>1.44</api.version>
+                                <docker.client.api.version>1.44</docker.client.api.version>
+                                <docker.host>npipe:////./pipe/dockerDesktopLinuxEngine</docker.host>
+                            </systemPropertyVariables>
+                        </configuration>
+                    </plugin>
+                </plugins>
+            </build>
+        </profile>
+    </profiles>
 </project>
