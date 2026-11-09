@@ -1,7 +1,8 @@
-import React, { useState } from 'react';
-import { Link, useNavigate } from 'react-router-dom';
+import React, { useState, useEffect } from 'react';
+import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, AlertCircle, CheckCircle } from 'lucide-react';
+import { APP_NAME } from '../config/constants';
+import { AlertCircle, CheckCircle2 } from 'lucide-react';
 
 export default function Register() {
   const [email, setEmail] = useState('');
@@ -13,6 +14,15 @@ export default function Register() {
 
   const { register, login } = useAuth();
   const navigate = useNavigate();
+  const location = useLocation();
+
+  useEffect(() => {
+    const params = new URLSearchParams(location.search);
+    const prefillEmail = params.get('email');
+    if (prefillEmail) {
+      setEmail(prefillEmail);
+    }
+  }, [location.search]);
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -38,9 +48,8 @@ export default function Register() {
     try {
       await register(email.trim(), password);
       setSuccess('Account created successfully! Logging you in...');
-      // Automatically login after registration
       await login(email.trim(), password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       if (err.response) {
         if (err.response.status === 409) {
@@ -62,14 +71,18 @@ export default function Register() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '420px', marginTop: '50px' }}>
-      <div className="card">
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'inline-flex', padding: '12px', background: 'var(--primary-light)', borderRadius: '50%', color: 'var(--primary)', marginBottom: '12px' }}>
-            <Wallet size={32} />
-          </div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Create an Account</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Instant wallet auto-provisioned upon signup</p>
+    <div className="bg-grid" style={{ minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+      <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '40px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <Link to="/" style={{ fontFamily: 'var(--font-headline)', fontSize: '26px', color: 'var(--charcoal)', textDecoration: 'none', display: 'inline-block', marginBottom: '8px' }}>
+            {APP_NAME}<span style={{ color: 'var(--yellow)' }}>.</span>
+          </Link>
+          <h1 style={{ fontSize: '32px', color: 'var(--charcoal)', marginBottom: '6px' }}>
+            CREATE ACCOUNT
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            Instant wallet provisioned with atomic ledger safety
+          </p>
         </div>
 
         {error && (
@@ -81,19 +94,19 @@ export default function Register() {
 
         {success && (
           <div className="alert alert-success">
-            <CheckCircle size={18} />
+            <CheckCircle2 size={18} />
             <span>{success}</span>
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="reg-email">Email Address</label>
+            <label htmlFor="reg-email">EMAIL ADDRESS</label>
             <input
               id="reg-email"
               type="email"
               className="form-control"
-              placeholder="user@example.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -102,7 +115,7 @@ export default function Register() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="reg-password">Password (min. 8 characters)</label>
+            <label htmlFor="reg-password">PASSWORD (MIN. 8 CHARACTERS)</label>
             <input
               id="reg-password"
               type="password"
@@ -116,7 +129,7 @@ export default function Register() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="reg-confirm">Confirm Password</label>
+            <label htmlFor="reg-confirm">CONFIRM PASSWORD</label>
             <input
               id="reg-confirm"
               type="password"
@@ -132,15 +145,18 @@ export default function Register() {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '8px' }}
+            style={{ width: '100%', marginTop: '12px' }}
             disabled={loading}
           >
-            {loading ? 'Creating account...' : 'Create Account'}
+            {loading ? 'PROVISIONING WALLET...' : 'GET STARTED'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Already have an account? <Link to="/login">Sign In</Link>
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#64748b' }}>
+          Already registered?{' '}
+          <Link to="/login" style={{ fontWeight: 700, color: 'var(--charcoal)' }}>
+            Sign In
+          </Link>
         </p>
       </div>
     </div>

@@ -1,7 +1,8 @@
 import React, { useState } from 'react';
 import { Link, useNavigate, useLocation } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
-import { Wallet, AlertCircle } from 'lucide-react';
+import { APP_NAME } from '../config/constants';
+import { AlertCircle, ArrowRight } from 'lucide-react';
 
 export default function Login() {
   const [email, setEmail] = useState('');
@@ -27,7 +28,7 @@ export default function Login() {
     setLoading(true);
     try {
       await login(email.trim(), password);
-      navigate('/');
+      navigate('/dashboard');
     } catch (err) {
       if (err.response) {
         if (err.response.status === 429) {
@@ -47,14 +48,18 @@ export default function Login() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '420px', marginTop: '60px' }}>
-      <div className="card">
-        <div style={{ textAlign: 'center', marginBottom: '24px' }}>
-          <div style={{ display: 'inline-flex', padding: '12px', background: 'var(--primary-light)', borderRadius: '50%', color: 'var(--primary)', marginBottom: '12px' }}>
-            <Wallet size={32} />
-          </div>
-          <h2 style={{ fontSize: '22px', fontWeight: 700 }}>Welcome Back</h2>
-          <p style={{ color: 'var(--text-muted)', fontSize: '14px', marginTop: '4px' }}>Sign in to your wallet account</p>
+    <div className="bg-grid" style={{ minHeight: 'calc(100vh - 80px)', display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '40px 16px' }}>
+      <div className="card" style={{ maxWidth: '440px', width: '100%', padding: '40px 32px' }}>
+        <div style={{ textAlign: 'center', marginBottom: '28px' }}>
+          <Link to="/" style={{ fontFamily: 'var(--font-headline)', fontSize: '26px', color: 'var(--charcoal)', textDecoration: 'none', display: 'inline-block', marginBottom: '8px' }}>
+            {APP_NAME}<span style={{ color: 'var(--yellow)' }}>.</span>
+          </Link>
+          <h1 style={{ fontSize: '32px', color: 'var(--charcoal)', marginBottom: '6px' }}>
+            SIGN IN
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            Enter your credentials to access your ledger wallet
+          </p>
         </div>
 
         {isExpired && (
@@ -71,14 +76,14 @@ export default function Login() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="email">Email Address</label>
+            <label htmlFor="email">EMAIL ADDRESS</label>
             <input
               id="email"
               type="email"
               className="form-control"
-              placeholder="user@example.com"
+              placeholder="you@example.com"
               value={email}
               onChange={(e) => setEmail(e.target.value)}
               disabled={loading}
@@ -87,7 +92,7 @@ export default function Login() {
           </div>
 
           <div className="form-group">
-            <label htmlFor="password">Password</label>
+            <label htmlFor="password">PASSWORD</label>
             <input
               id="password"
               type="password"
@@ -103,15 +108,18 @@ export default function Login() {
           <button
             type="submit"
             className="btn btn-primary"
-            style={{ width: '100%', marginTop: '8px' }}
+            style={{ width: '100%', marginTop: '12px' }}
             disabled={loading}
           >
-            {loading ? 'Signing in...' : 'Sign In'}
+            {loading ? 'AUTHENTICATING...' : 'SIGN IN'}
           </button>
         </form>
 
-        <p style={{ textAlign: 'center', marginTop: '20px', fontSize: '14px', color: 'var(--text-muted)' }}>
-          Don't have an account? <Link to="/register">Create one</Link>
+        <p style={{ textAlign: 'center', marginTop: '24px', fontSize: '14px', color: '#64748b' }}>
+          New to {APP_NAME}?{' '}
+          <Link to="/register" style={{ fontWeight: 700, color: 'var(--charcoal)' }}>
+            Create an Account
+          </Link>
         </p>
       </div>
     </div>

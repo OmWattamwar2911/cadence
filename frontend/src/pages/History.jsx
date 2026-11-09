@@ -1,7 +1,8 @@
 import React, { useEffect, useState } from 'react';
+import { Link } from 'react-router-dom';
 import apiClient from '../api/axios';
 import { formatPaise } from '../utils/money';
-import { History as HistoryIcon, Filter, ChevronLeft, ChevronRight, AlertCircle } from 'lucide-react';
+import { History as HistoryIcon, Filter, ChevronLeft, ChevronRight, AlertCircle, PlusCircle } from 'lucide-react';
 
 export default function HistoryPage() {
   const [transactions, setTransactions] = useState([]);
@@ -64,64 +65,81 @@ export default function HistoryPage() {
   };
 
   return (
-    <div className="container">
+    <div className="container" style={{ paddingTop: '32px', paddingBottom: '64px' }}>
       <div className="card">
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '20px', flexWrap: 'wrap', gap: '12px' }}>
-          <div style={{ display: 'flex', alignItems: 'center', gap: '10px' }}>
-            <div style={{ padding: '8px', background: 'var(--primary-light)', color: 'var(--primary)', borderRadius: '8px' }}>
-              <HistoryIcon size={22} />
-            </div>
-            <div>
-              <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Transaction History</h2>
-              <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
-                {totalElements} total entries • Paginated double-entry ledger
-              </p>
-            </div>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '24px', flexWrap: 'wrap', gap: '16px' }}>
+          <div>
+            <h1 style={{ fontSize: '32px', color: 'var(--charcoal)', marginBottom: '4px' }}>
+              TRANSACTION HISTORY
+            </h1>
+            <p style={{ color: '#64748b', fontSize: '14px' }}>
+              {totalElements} total entries • Double-entry immutable audit ledger
+            </p>
           </div>
 
-          {/* Type quick filter buttons */}
-          <div style={{ display: 'flex', gap: '6px' }}>
+          {/* Type Filter Buttons */}
+          <div style={{ display: 'flex', gap: '8px' }}>
             {['', 'DEPOSIT', 'DEBIT', 'CREDIT'].map((t) => (
               <button
                 key={t}
                 type="button"
                 className={`btn ${selectedType === t ? 'btn-primary' : 'btn-secondary'}`}
-                style={{ padding: '6px 12px', fontSize: '12px' }}
+                style={{ padding: '8px 16px', fontSize: '13px' }}
                 onClick={() => setSelectedType(t)}
               >
-                {t || 'All'}
+                {t || 'ALL'}
               </button>
             ))}
           </div>
         </div>
 
         {/* Date Filter Bar */}
-        <form onSubmit={handleFilterSubmit} style={{ display: 'flex', gap: '12px', marginBottom: '20px', flexWrap: 'wrap', alignItems: 'center', background: '#f8fafc', padding: '12px', borderRadius: '8px' }}>
+        <form
+          onSubmit={handleFilterSubmit}
+          style={{
+            display: 'flex',
+            gap: '12px',
+            marginBottom: '24px',
+            flexWrap: 'wrap',
+            alignItems: 'center',
+            background: '#f8fafc',
+            padding: '16px',
+            borderRadius: 'var(--radius-input)',
+            border: '1px solid var(--border-light)',
+          }}
+        >
           <div style={{ display: 'flex', alignItems: 'center', gap: '8px' }}>
-            <Filter size={16} color="var(--text-muted)" />
-            <span style={{ fontSize: '13px', fontWeight: 500 }}>Date Range:</span>
+            <Filter size={16} color="var(--charcoal)" />
+            <span style={{ fontSize: '13px', fontWeight: 700, textTransform: 'uppercase' }}>DATE FILTER:</span>
           </div>
           <input
             type="date"
             className="form-control"
-            style={{ width: 'auto', padding: '6px 10px', fontSize: '13px' }}
+            style={{ width: 'auto', padding: '8px 12px', fontSize: '13px' }}
             value={fromDate}
             onChange={(e) => setFromDate(e.target.value)}
+            aria-label="From Date"
           />
-          <span style={{ color: 'var(--text-muted)', fontSize: '13px' }}>to</span>
+          <span style={{ color: '#64748b', fontSize: '13px' }}>TO</span>
           <input
             type="date"
             className="form-control"
-            style={{ width: 'auto', padding: '6px 10px', fontSize: '13px' }}
+            style={{ width: 'auto', padding: '8px 12px', fontSize: '13px' }}
             value={toDate}
             onChange={(e) => setToDate(e.target.value)}
+            aria-label="To Date"
           />
-          <button type="submit" className="btn btn-secondary" style={{ padding: '6px 14px', fontSize: '13px' }}>
-            Apply
+          <button type="submit" className="btn btn-secondary" style={{ padding: '8px 16px', fontSize: '13px' }}>
+            APPLY
           </button>
           {(fromDate || toDate) && (
-            <button type="button" onClick={handleResetFilter} className="btn" style={{ padding: '6px 10px', fontSize: '13px', background: 'transparent', color: 'var(--text-muted)' }}>
-              Clear
+            <button
+              type="button"
+              onClick={handleResetFilter}
+              className="btn"
+              style={{ padding: '8px 12px', fontSize: '13px', background: 'transparent', color: '#64748b' }}
+            >
+              CLEAR
             </button>
           )}
         </form>
@@ -134,12 +152,17 @@ export default function HistoryPage() {
         )}
 
         {loading ? (
-          <div style={{ textAlign: 'center', padding: '40px 0', color: 'var(--text-muted)' }}>
-            <p>Loading transactions...</p>
+          <div style={{ textAlign: 'center', padding: '60px 0', color: '#64748b' }}>
+            <p style={{ fontSize: '15px' }}>Loading transactions from ledger...</p>
           </div>
         ) : transactions.length === 0 ? (
           <div className="empty-state">
-            <p>No transactions match your criteria.</p>
+            <p style={{ fontSize: '16px', color: '#64748b', marginBottom: '20px' }}>
+              No transactions match your criteria.
+            </p>
+            <Link to="/deposit" className="btn btn-primary" style={{ padding: '12px 28px', fontSize: '14px' }}>
+              <PlusCircle size={16} /> DEPOSIT FUNDS NOW
+            </Link>
           </div>
         ) : (
           <div style={{ overflowX: 'auto' }}>
@@ -147,11 +170,11 @@ export default function HistoryPage() {
               <thead>
                 <tr>
                   <th>ID</th>
-                  <th>Type</th>
-                  <th>Reference</th>
-                  <th>Amount</th>
-                  <th>Balance After</th>
-                  <th>Date & Time</th>
+                  <th>TYPE</th>
+                  <th>REFERENCE</th>
+                  <th>AMOUNT</th>
+                  <th>BALANCE AFTER</th>
+                  <th>DATE & TIME</th>
                 </tr>
               </thead>
               <tbody>
@@ -159,18 +182,27 @@ export default function HistoryPage() {
                   const isPositive = tx.type === 'DEPOSIT' || tx.type === 'CREDIT';
                   return (
                     <tr key={tx.id}>
-                      <td style={{ color: 'var(--text-muted)' }}>#{tx.id}</td>
+                      <td style={{ color: '#64748b', fontWeight: 600 }}>#{tx.id}</td>
                       <td>
                         <span className={`badge badge-${tx.type.toLowerCase()}`}>
                           {tx.type}
                         </span>
                       </td>
-                      <td>{tx.reference || '—'}</td>
-                      <td style={{ fontWeight: 600, color: isPositive ? 'var(--success)' : 'var(--danger)' }}>
-                        {isPositive ? '+' : '-'}{formatPaise(tx.amount)}
+                      <td style={{ color: '#334155' }}>{tx.reference || '—'}</td>
+                      <td
+                        style={{
+                          fontWeight: 700,
+                          color: isPositive ? '#065f46' : '#991b1b',
+                          whiteSpace: 'nowrap',
+                        }}
+                      >
+                        {isPositive ? '+ ' : '- '}
+                        {formatPaise(tx.amount)}
                       </td>
-                      <td style={{ color: 'var(--text-muted)' }}>{formatPaise(tx.balanceAfter)}</td>
-                      <td style={{ color: 'var(--text-muted)', fontSize: '13px' }}>
+                      <td style={{ color: '#64748b', fontWeight: 500 }}>
+                        {formatPaise(tx.balanceAfter)}
+                      </td>
+                      <td style={{ color: '#64748b', fontSize: '13px' }}>
                         {new Date(tx.createdAt).toLocaleString()}
                       </td>
                     </tr>
@@ -179,29 +211,29 @@ export default function HistoryPage() {
               </tbody>
             </table>
 
-            {/* Pagination Controls */}
-            <div className="pagination">
-              <span style={{ fontSize: '13px', color: 'var(--text-muted)' }}>
-                Page {page + 1} of {Math.max(1, totalPages)}
+            {/* Pill-Style Pagination Controls */}
+            <div className="pagination-container">
+              <span style={{ fontSize: '13px', color: '#64748b', fontWeight: 500 }}>
+                Page {page + 1} of {Math.max(1, totalPages)} ({totalElements} total entries)
               </span>
               <div style={{ display: 'flex', gap: '8px' }}>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="pill-pagination-btn"
                   disabled={page <= 0 || loading}
                   onClick={() => fetchTransactions(page - 1)}
-                  style={{ padding: '6px 12px', fontSize: '13px' }}
+                  aria-label="Previous Page"
                 >
-                  <ChevronLeft size={16} /> Previous
+                  <ChevronLeft size={14} style={{ display: 'inline', verticalAlign: 'middle' }} /> PREVIOUS
                 </button>
                 <button
                   type="button"
-                  className="btn btn-secondary"
+                  className="pill-pagination-btn"
                   disabled={page >= totalPages - 1 || loading}
                   onClick={() => fetchTransactions(page + 1)}
-                  style={{ padding: '6px 12px', fontSize: '13px' }}
+                  aria-label="Next Page"
                 >
-                  Next <ChevronRight size={16} />
+                  NEXT <ChevronRight size={14} style={{ display: 'inline', verticalAlign: 'middle' }} />
                 </button>
               </div>
             </div>

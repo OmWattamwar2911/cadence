@@ -11,8 +11,10 @@ public record WalletResponse(
         Instant updatedAt
 ) {
     public static WalletResponse of(Long walletId, Long userId, Long balance, String currency, Instant updatedAt) {
-        double mainUnits = (balance != null ? balance : 0L) / 100.0;
-        String formatted = String.format("₹%.2f", mainUnits);
+        long bal = (balance != null ? balance : 0L);
+        long mainUnits = bal / 100;
+        long minorUnits = Math.abs(bal % 100);
+        String formatted = String.format("₹%d.%02d", mainUnits, minorUnits);
         return new WalletResponse(walletId, userId, balance, formatted, currency, updatedAt);
     }
 }

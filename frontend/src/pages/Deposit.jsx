@@ -1,17 +1,14 @@
 import React, { useState } from 'react';
-import { useNavigate } from 'react-router-dom';
 import { v4 as uuidv4 } from 'uuid';
 import apiClient from '../api/axios';
 import { rupeesToPaise, formatPaise } from '../utils/money';
-import { ArrowDownToLine, AlertCircle, CheckCircle2 } from 'lucide-react';
+import { ArrowDownToLine, AlertCircle, CheckCircle2, Loader2 } from 'lucide-react';
 
 export default function Deposit() {
   const [amountRupees, setAmountRupees] = useState('');
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
-
-  const navigate = useNavigate();
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -33,7 +30,7 @@ export default function Deposit() {
         { headers: { 'Idempotency-Key': idemKey } }
       );
 
-      setSuccess(`Successfully deposited ${formatPaise(amountInPaise)}! New balance: ${formatPaise(res.data.balance)}`);
+      setSuccess(`Deposit of ${formatPaise(amountInPaise)} succeeded! New Balance: ${formatPaise(res.data.balance)}`);
       setAmountRupees('');
     } catch (err) {
       if (err.response && err.response.data && err.response.data.message) {
@@ -47,16 +44,15 @@ export default function Deposit() {
   };
 
   return (
-    <div className="container" style={{ maxWidth: '480px' }}>
+    <div className="container" style={{ maxWidth: '500px', paddingTop: '40px', paddingBottom: '60px' }}>
       <div className="card">
-        <div style={{ display: 'flex', alignItems: 'center', gap: '10px', marginBottom: '20px' }}>
-          <div style={{ padding: '8px', background: 'var(--success-light)', color: 'var(--success)', borderRadius: '8px' }}>
-            <ArrowDownToLine size={22} />
-          </div>
-          <div>
-            <h2 style={{ fontSize: '20px', fontWeight: 700 }}>Deposit Funds</h2>
-            <p style={{ color: 'var(--text-muted)', fontSize: '13px' }}>Simulate instant bank top-up to your wallet</p>
-          </div>
+        <div style={{ marginBottom: '24px' }}>
+          <h1 style={{ fontSize: '32px', color: 'var(--charcoal)', marginBottom: '6px' }}>
+            DEPOSIT FUNDS
+          </h1>
+          <p style={{ color: '#64748b', fontSize: '14px' }}>
+            Simulate an instant banking top-up to your wallet
+          </p>
         </div>
 
         {error && (
@@ -73,39 +69,40 @@ export default function Deposit() {
           </div>
         )}
 
-        <form onSubmit={handleSubmit}>
+        <form onSubmit={handleSubmit} noValidate>
           <div className="form-group">
-            <label htmlFor="deposit-amount">Amount in Rupees (₹)</label>
+            <label htmlFor="deposit-amount">AMOUNT IN RUPEES (₹)</label>
             <input
               id="deposit-amount"
               type="number"
               step="0.01"
               min="0.01"
               className="form-control"
-              placeholder="e.g. 1000.00"
+              placeholder="e.g. 500.00"
               value={amountRupees}
               onChange={(e) => setAmountRupees(e.target.value)}
               disabled={loading}
               required
             />
             {amountRupees && !isNaN(amountRupees) && parseFloat(amountRupees) > 0 && (
-              <small style={{ color: 'var(--text-muted)', display: 'block', marginTop: '4px' }}>
-                Minor units: {rupeesToPaise(amountRupees)} paise
+              <small style={{ color: '#64748b', display: 'block', marginTop: '6px', fontSize: '12px' }}>
+                Minor units: <strong>{rupeesToPaise(amountRupees)} paise</strong>
               </small>
             )}
           </div>
 
-          <div style={{ display: 'flex', gap: '8px', marginBottom: '20px' }}>
-            {[100, 500, 1000, 5000].map((quickVal) => (
+          {/* Quick Amount Tiles */}
+          <div style={{ display: 'flex', gap: '8px', marginBottom: '24px', flexWrap: 'wrap' }}>
+            {[100, 500, 1000, 5000].map((val) => (
               <button
-                key={quickVal}
+                key={val}
                 type="button"
                 className="btn btn-secondary"
-                style={{ flex: 1, padding: '6px 0', fontSize: '12px' }}
-                onClick={() => setAmountRupees(String(quickVal))}
+                style={{ flex: '1 1 80px', padding: '8px 0', fontSize: '13px' }}
+                onClick={() => setAmountRupees(String(val))}
                 disabled={loading}
               >
-                +₹{quickVal}
+                +₹{val}
               </button>
             ))}
           </div>
@@ -116,8 +113,15 @@ export default function Deposit() {
             style={{ width: '100%' }}
             disabled={loading}
           >
-            <ArrowDownToLine size={16} />
-            {loading ? 'Processing Deposit...' : 'Confirm Deposit'}
+            {loading ? (
+              <>
+                <Loader2 size={16} className="animate-spin" /> PROCESSING DEPOSIT...
+              </>
+            ) : (
+              <>
+                <ArrowDownToLine size={16} /> CONFIRM DEPOSIT
+              </>
+            )}
           </button>
         </form>
       </div>
