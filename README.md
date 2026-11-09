@@ -3,11 +3,12 @@
 </p>
 
 <p align="center">
-  <a href="#architecture-overview"><img src="https://img.shields.io/badge/Architecture-Clean%20%2F%20Orchestrator-171e19?style=for-the-badge&logoColor=ffe17c" alt="Architecture" /></a>
+  <a href="https://github.com/OmWattamwar2911/cadence/actions"><img src="https://img.shields.io/github/actions/workflow/status/OmWattamwar2911/cadence/ci.yml?branch=main&style=for-the-badge&logo=githubactions&logoColor=ffe17c&label=CI%20BUILD&labelColor=171e19&color=10b981" alt="Build Status" /></a>
   <a href="#testing--quality-assurance"><img src="https://img.shields.io/badge/JaCoCo%20Coverage-83.34%25-ffe17c?style=for-the-badge&logoColor=171e19&labelColor=171e19" alt="Coverage" /></a>
   <a href="#real-measured-load-test-performance"><img src="https://img.shields.io/badge/Stress%20Test-36.17%20TPS%20%7C%200%25%20Err-171e19?style=for-the-badge&logoColor=ffe17c" alt="Performance" /></a>
   <a href="#running-cadence"><img src="https://img.shields.io/badge/Docker-Multi--Stage%20Compose-272727?style=for-the-badge&logo=docker&logoColor=ffe17c" alt="Docker" /></a>
   <a href="#running-cadence"><img src="https://img.shields.io/badge/Java-21%20LTS-272727?style=for-the-badge&logo=openjdk&logoColor=ffe17c" alt="Java 21" /></a>
+  <a href="LICENSE"><img src="https://img.shields.io/badge/License-MIT-ffe17c?style=for-the-badge&logoColor=171e19&labelColor=171e19" alt="License: MIT" /></a>
 </p>
 
 ---
@@ -378,3 +379,17 @@ High-concurrency stress testing was conducted using k6 executing concurrent tran
   - **p95 Latency**: **334.75 ms**
   - **Error Rate**: **0.00%** (578/578 successful transfers)
   - **Post-Run Reconciliation**: Discrepancies = 0 (Every wallet balance precisely matches the sum of its ledger entries).
+
+---
+
+## 📄 License
+
+This project is licensed under the [MIT License](LICENSE) — see the LICENSE file for details.
+
+---
+
+## 👤 Author
+
+**Om Wattamwar**
+- **GitHub**: [@OmWattamwar2911](https://github.com/OmWattamwar2911)
+- **Project Repository**: [OmWattamwar2911/cadence](https://github.com/OmWattamwar2911/cadence)
