@@ -4,14 +4,12 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.walletservice.dto.response.TransferResponse;
 import com.walletservice.entity.*;
-import com.walletservice.exception.FraudRuleViolationException;
 import com.walletservice.exception.InsufficientBalanceException;
 import com.walletservice.exception.ResourceNotFoundException;
 import com.walletservice.repository.*;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Service;
-import org.springframework.transaction.annotation.Propagation;
 import org.springframework.transaction.annotation.Transactional;
 
 @Service
@@ -88,13 +86,8 @@ public class TransferService {
             throw new InsufficientBalanceException(lockedSender.getBalance(), amount);
         }
 
-        // 5. Apply fraud rules
-        try {
-            fraudCheckService.validateTransfer(lockedSender, amount);
-        } catch (FraudRuleViolationException ex) {
-            recordRejectedTransfer(lockedSender, lockedReceiver, amount, reference);
-            throw ex;
-        }
+        // 5. Apply fraud rules (throws FraudRuleViolationException on violation)
+        fraudCheckService.validateTransfer(lockedSender, amount);
 
         // 6. Safe balance updates preventing overflow
         long senderBalanceAfter = Math.subtractExact(lockedSender.getBalance(), amount);
@@ -146,12 +139,5 @@ public class TransferService {
                 transfer.getId(), lockedSender.getId(), lockedReceiver.getId(), amount);
 
         return response;
-    }
-
-    @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public void recordRejectedTransfer(Wallet sender, Wallet receiver, Long amount, String reference) {
-        Transfer rejectedTransfer = new Transfer(sender, receiver, amount, TransferStatus.REJECTED, reference);
-        transferRepository.save(rejectedTransfer);
-        log.info("Recorded REJECTED transfer: from={}, to={}, amount={}", sender.getId(), receiver.getId(), amount);
     }
 }

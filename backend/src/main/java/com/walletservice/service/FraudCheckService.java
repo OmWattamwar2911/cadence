@@ -1,5 +1,6 @@
 package com.walletservice.service;
 
+import com.walletservice.entity.TransferStatus;
 import com.walletservice.entity.Wallet;
 import com.walletservice.exception.FraudRuleViolationException;
 import com.walletservice.repository.TransferRepository;
@@ -33,23 +34,36 @@ public class FraudCheckService {
     }
 
     public void validateTransfer(Wallet senderWallet, Long amount) {
-        // 1. Max amount check
+        // 1. Max amount check: strictly greater than limit is rejected; exactly at limit is permitted
         if (amount > maxAmountPerTransfer) {
-            log.warn("Transfer rejected: amount {} exceeds max allowed {}", amount, maxAmountPerTransfer);
+            log.warn("Transfer rejected: amount {} exceeds max allowed limit of {}", amount, maxAmountPerTransfer);
             throw new FraudRuleViolationException(
                     String.format("Transfer amount %d exceeds maximum allowed limit of %d paise", amount, maxAmountPerTransfer));
         }
 
-        // 2. Velocity check (max N transfers in M minutes)
+        // 2. Velocity check (max N completed transfers within M minutes)
         Instant windowStart = Instant.now().minus(velocityWindowMinutes, ChronoUnit.MINUTES);
-        long recentTransferCount = transferRepository.countTransfersSince(senderWallet.getId(), windowStart);
+        long recentCompletedCount = transferRepository.countTransfersByStatusSince(
+                senderWallet.getId(), TransferStatus.COMPLETED, windowStart);
 
-        if (recentTransferCount >= velocityMaxTransfers) {
-            log.warn("Transfer rejected for wallet {}: {} transfers in last {} minutes (limit: {})",
-                    senderWallet.getId(), recentTransferCount, velocityWindowMinutes, velocityMaxTransfers);
+        if (recentCompletedCount >= velocityMaxTransfers) {
+            log.warn("Transfer rejected for wallet {}: {} completed transfers in last {} minutes (limit: {})",
+                    senderWallet.getId(), recentCompletedCount, velocityWindowMinutes, velocityMaxTransfers);
             throw new FraudRuleViolationException(
                     String.format("Velocity limit exceeded: maximum of %d transfers allowed within %d minutes",
                             velocityMaxTransfers, velocityWindowMinutes));
         }
+    }
+
+    public long getMaxAmountPerTransfer() {
+        return maxAmountPerTransfer;
+    }
+
+    public int getVelocityMaxTransfers() {
+        return velocityMaxTransfers;
+    }
+
+    public int getVelocityWindowMinutes() {
+        return velocityWindowMinutes;
     }
 }

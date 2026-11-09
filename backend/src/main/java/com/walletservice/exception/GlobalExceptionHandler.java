@@ -3,6 +3,8 @@ package com.walletservice.exception;
 import com.walletservice.dto.response.ErrorResponse;
 import com.walletservice.filter.RequestIdFilter;
 import jakarta.servlet.http.HttpServletRequest;
+import jakarta.validation.ConstraintViolation;
+import jakarta.validation.ConstraintViolationException;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 import org.slf4j.MDC;
@@ -15,6 +17,8 @@ import org.springframework.web.HttpRequestMethodNotSupportedException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.HandlerMethodValidationException;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 import org.springframework.web.servlet.resource.NoResourceFoundException;
 
 import java.time.Instant;
@@ -55,6 +59,52 @@ public class GlobalExceptionHandler {
                 HttpStatus.BAD_REQUEST,
                 "VALIDATION_ERROR",
                 message.isEmpty() ? "Validation failed" : message,
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(HandlerMethodValidationException.class)
+    public ResponseEntity<ErrorResponse> handleHandlerMethodValidationException(HandlerMethodValidationException ex, HttpServletRequest request) {
+        String message = ex.getAllValidationResults().stream()
+                .flatMap(r -> r.getResolvableErrors().stream())
+                .map(err -> err.getDefaultMessage())
+                .collect(Collectors.joining("; "));
+
+        log.warn("Method parameter validation failed on path {}: {}", request.getRequestURI(), message);
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "VALIDATION_ERROR",
+                message.isEmpty() ? "Validation error on request parameters" : message,
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(ConstraintViolationException.class)
+    public ResponseEntity<ErrorResponse> handleConstraintViolation(ConstraintViolationException ex, HttpServletRequest request) {
+        String message = ex.getConstraintViolations().stream()
+                .map(ConstraintViolation::getMessage)
+                .collect(Collectors.joining("; "));
+
+        log.warn("Constraint violation on path {}: {}", request.getRequestURI(), message);
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "VALIDATION_ERROR",
+                message.isEmpty() ? "Constraint violation" : message,
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ErrorResponse> handleTypeMismatch(MethodArgumentTypeMismatchException ex, HttpServletRequest request) {
+        String message = String.format("Parameter '%s' invalid value '%s'", ex.getName(), ex.getValue());
+        log.warn("Type mismatch on path {}: {}", request.getRequestURI(), message);
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_ARGUMENT",
+                message,
                 request
         );
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);

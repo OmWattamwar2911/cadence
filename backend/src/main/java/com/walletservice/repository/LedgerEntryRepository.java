@@ -10,16 +10,21 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.time.Instant;
-import java.util.Optional;
 
 @Repository
 public interface LedgerEntryRepository extends JpaRepository<LedgerEntry, Long> {
 
-    @Query("SELECT le FROM LedgerEntry le WHERE le.wallet.id = :walletId " +
-           "AND (:entryType IS NULL OR le.entryType = :entryType) " +
-           "AND (:fromTime IS NULL OR le.createdAt >= :fromTime) " +
-           "AND (:toTime IS NULL OR le.createdAt <= :toTime) " +
-           "ORDER BY le.createdAt DESC, le.id DESC")
+    @Query(
+        value = "SELECT le FROM LedgerEntry le LEFT JOIN FETCH le.transfer t WHERE le.wallet.id = :walletId " +
+               "AND (:entryType IS NULL OR le.entryType = :entryType) " +
+               "AND (:fromTime IS NULL OR le.createdAt >= :fromTime) " +
+               "AND (:toTime IS NULL OR le.createdAt <= :toTime) " +
+               "ORDER BY le.createdAt DESC, le.id DESC",
+        countQuery = "SELECT COUNT(le) FROM LedgerEntry le WHERE le.wallet.id = :walletId " +
+               "AND (:entryType IS NULL OR le.entryType = :entryType) " +
+               "AND (:fromTime IS NULL OR le.createdAt >= :fromTime) " +
+               "AND (:toTime IS NULL OR le.createdAt <= :toTime)"
+    )
     Page<LedgerEntry> findTransactions(
             @Param("walletId") Long walletId,
             @Param("entryType") EntryType entryType,

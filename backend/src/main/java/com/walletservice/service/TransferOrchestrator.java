@@ -6,12 +6,13 @@ import com.walletservice.dto.request.TransferRequest;
 import com.walletservice.dto.response.TransferResponse;
 import com.walletservice.entity.IdempotencyKey;
 import com.walletservice.entity.User;
+import com.walletservice.exception.FraudRuleViolationException;
 import com.walletservice.exception.ResourceNotFoundException;
 import com.walletservice.exception.SelfTransferException;
 import com.walletservice.repository.UserRepository;
+import com.walletservice.repository.WalletRepository;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
-import org.springframework.dao.CannotAcquireLockException;
 import org.springframework.dao.ConcurrencyFailureException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.stereotype.Service;
@@ -25,18 +26,24 @@ public class TransferOrchestrator {
     private static final int MAX_LOCK_RETRIES = 3;
 
     private final UserRepository userRepository;
+    private final WalletRepository walletRepository;
     private final TransferService transferService;
+    private final TransferRejectionService transferRejectionService;
     private final IdempotencyService idempotencyService;
     private final ObjectMapper objectMapper;
     private final Random random = new Random();
 
     public TransferOrchestrator(
             UserRepository userRepository,
+            WalletRepository walletRepository,
             TransferService transferService,
+            TransferRejectionService transferRejectionService,
             IdempotencyService idempotencyService,
             ObjectMapper objectMapper) {
         this.userRepository = userRepository;
+        this.walletRepository = walletRepository;
         this.transferService = transferService;
+        this.transferRejectionService = transferRejectionService;
         this.idempotencyService = idempotencyService;
         this.objectMapper = objectMapper;
     }
@@ -69,6 +76,16 @@ public class TransferOrchestrator {
                         request.amount(),
                         request.reference()
                 );
+            } catch (FraudRuleViolationException e) {
+                // Fraud rule was violated: the transfer transaction has rolled back.
+                // Record the REJECTED transfer audit trail in an autonomous committed transaction.
+                Long senderWalletId = walletRepository.findWalletIdByUserId(senderUserId).orElse(null);
+                Long receiverWalletId = walletRepository.findWalletIdByUserId(receiver.getId()).orElse(null);
+                if (senderWalletId != null && receiverWalletId != null) {
+                    transferRejectionService.recordRejectedTransfer(
+                            senderWalletId, receiverWalletId, request.amount(), request.reference());
+                }
+                throw e;
             } catch (DataIntegrityViolationException e) {
                 log.info("Duplicate idempotency key detected for transfer: userId={}, key={}", senderUserId, idemKey);
                 IdempotencyKey existingKey = idempotencyService.resolveDuplicateKey(senderUserId, idemKey, requestHash);
@@ -98,8 +115,11 @@ public class TransferOrchestrator {
     }
 
     private void validateIdempotencyKey(String idemKey) {
-        if (idemKey == null || idemKey.trim().isEmpty() || idemKey.length() > 64) {
-            throw new IllegalArgumentException("Idempotency-Key header is required and must be between 1 and 64 characters");
+        if (idemKey == null || idemKey.trim().isEmpty()) {
+            throw new IllegalArgumentException("Idempotency-Key header is required");
+        }
+        if (idemKey.length() > 64) {
+            throw new IllegalArgumentException("Idempotency-Key header must not exceed 64 characters");
         }
     }
 }
