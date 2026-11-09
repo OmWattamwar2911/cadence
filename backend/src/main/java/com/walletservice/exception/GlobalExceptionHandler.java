@@ -60,6 +60,42 @@ public class GlobalExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
     }
 
+    @ExceptionHandler(org.springframework.http.converter.HttpMessageNotReadableException.class)
+    public ResponseEntity<ErrorResponse> handleHttpMessageNotReadable(org.springframework.http.converter.HttpMessageNotReadableException ex, HttpServletRequest request) {
+        log.warn("Malformed JSON or non-numeric argument on path {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "MALFORMED_REQUEST",
+                "Malformed request body or invalid data type",
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(org.springframework.web.bind.MissingRequestHeaderException.class)
+    public ResponseEntity<ErrorResponse> handleMissingRequestHeader(org.springframework.web.bind.MissingRequestHeaderException ex, HttpServletRequest request) {
+        log.warn("Missing required header on path {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "MISSING_HEADER",
+                "Missing required header: " + ex.getHeaderName(),
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<ErrorResponse> handleIllegalArgumentException(IllegalArgumentException ex, HttpServletRequest request) {
+        log.warn("Invalid argument on path {}: {}", request.getRequestURI(), ex.getMessage());
+        ErrorResponse error = buildError(
+                HttpStatus.BAD_REQUEST,
+                "INVALID_ARGUMENT",
+                ex.getMessage(),
+                request
+        );
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(error);
+    }
+
     @ExceptionHandler(NoResourceFoundException.class)
     public ResponseEntity<ErrorResponse> handleNoResourceFound(NoResourceFoundException ex, HttpServletRequest request) {
         ErrorResponse error = buildError(HttpStatus.NOT_FOUND, "RESOURCE_NOT_FOUND", ex.getMessage(), request);
