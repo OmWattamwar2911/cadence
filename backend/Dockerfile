@@ -3,18 +3,20 @@ FROM maven:3.9.9-eclipse-temurin-21 AS builder
 
 WORKDIR /build
 
-# Cache dependencies
-COPY pom.xml .
-RUN mvn dependency:go-offline -B
+# Cap Maven memory for cloud builders with limited RAM (e.g. Render 512MB)
+ENV MAVEN_OPTS="-Xmx384m -XX:+UseSerialGC"
 
-# Copy source code and build production jar
+# Copy pom.xml and source files
+COPY pom.xml .
 COPY src ./src
+
+# Build production jar skipping tests
 RUN mvn clean package -DskipTests -B
 
 # Stage 2: Lightweight, secure JRE runtime
 FROM eclipse-temurin:21-jre-jammy
 
-# Install curl for healthcheck and security updates
+# Install curl for healthchecks
 RUN apt-get update && \
     apt-get install -y --no-install-recommends curl && \
     rm -rf /var/lib/apt/lists/*
@@ -31,6 +33,6 @@ COPY --from=builder --chown=appuser:appgroup /build/target/wallet-service-backen
 # Run as non-root user
 USER appuser
 
-EXPOSE 8080
+EXPOSE 8080 10000
 
 ENTRYPOINT ["java", "-XX:+UseG1GC", "-XX:MaxRAMPercentage=75.0", "-jar", "app.jar"]
